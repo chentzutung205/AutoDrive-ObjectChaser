@@ -64,9 +64,7 @@ class ChaseObject(Node):
 
 
     def object_callback(self, posinfo):
-        velocity = Twist()
-        velocity.linear = Vector3()
-        velocity.angular = Vector3()
+        robot_velocity = Twist()
 
         # if the object is detected
         distance = posinfo.linear.x
@@ -74,22 +72,10 @@ class ChaseObject(Node):
         u_dis = self.linear_pid(distance)
         u_theta = self.angular_pid(theta)
         
-        velocity.linear.x = u_dis
-        velocity.linear.y = 0.0
-        velocity.linear.z = 0.0
-        velocity.angular.x = 0.0
-        velocity.angular.y = 0.0
-        velocity.angular.z = u_theta
+        robot_velocity.linear.x = u_dis
+        robot_velocity.angular.z = u_theta
 
-        # else
-        # velocity.linear.x = 0.0
-        # velocity.linear.y = 0.0
-        # velocity.linear.z = 0.0
-        # velocity.angular.x = 0.0
-        # velocity.angular.y = 0.0
-        # velocity.angular.z = 0.0
-
-        self.velocity_publisher.publish(velocity)
+        self.velocity_publisher.publish(robot_velocity)
 
 
 def main(args=None):

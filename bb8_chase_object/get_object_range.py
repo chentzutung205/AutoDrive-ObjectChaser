@@ -5,7 +5,7 @@ from sensor_msgs.msg import LaserScan
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy, QoSHistoryPolicy
 
 import numpy as np
-from math import pi, ceil
+from math import pi, floor, ceil
 
 
 class RangeCatcher(Node):
@@ -28,13 +28,15 @@ class RangeCatcher(Node):
         self.object_position_publisher = self.create_publisher(Twist, '/distance_and_angle', 10)
 
         self.theta = 0.0 # theta is the bearing angle of the object
-        self.detect_object = False
+        self.bool_detect = False
 
 
     def object_callback(self, bearing):
+        # decide it is detect
         if bearing is not None:
             self.theta = bearing.x * (pi / 180)
-            print(self.theta)
+            self.bool_detect = True
+            print("theta: ", self.theta)
 
 
     def lidar_callback(self, posinfo):
@@ -43,32 +45,28 @@ class RangeCatcher(Node):
         """
         roi_min = (-30) * (pi / 180)
         roi_max = 30 * (pi / 180)
-        if roi_min <= self.theta <= roi_max:
-            roi = np.array(posinfo.ranges)
-            roi = roi[~np.isnan(roi)]
-            angle_min = posinfo.angle_min
-            angle_inc = posinfo.angle_increment
-            n = len(roi)
 
-            if self.theta > 0:
-                object_index = ceil((self.theta - angle_min) / angle_inc)
-            else:
-                object_index = n - ceil((abs(self.theta) - angle_min) / angle_inc)
-            
-            object_dis = roi[object_index]
-            print("distance: ", object_dis)
+        if roi_min <= self.theta and roi_max >= self.theta:
+            if self.bool_detect is True:
+                range = np.array(posinfo.ranges)
+                range = range[~np.isnan(range)]
+                n = len(range)
+                
+                angle_min = posinfo.angle_min
+                angle_inc = posinfo.angle_increment
+                
+                object_index = ceil(abs(self.theta) / angle_inc) 
+                if self.theta < 0:
+                    object_index = n - ceil(abs(self.theta) / angle_inc)
+                
+                object_dis = range[object_index]
+                print("distance: ", object_dis)
 
-            pos = Twist()
-            pos.linear = Vector3()
-            pos.linear.x = float(object_dis)
-            pos.linear.y = 0.0
-            pos.linear.z = 0.0
-            pos.angular = Vector3()
-            pos.angular.x = 0.0
-            pos.angular.y = 0.0
-            pos.angular.z = self.theta
+                pos = Twist()
+                pos.linear.x = float(object_dis)
+                pos.angular.z = self.theta
 
-            self.object_position_publisher.publish(pos)
+                self.object_position_publisher.publish(pos)
 
 
 def main(args=None):
