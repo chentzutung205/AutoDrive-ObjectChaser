@@ -38,6 +38,7 @@ class ImageSubscriber(Node):
     def publish_pixel_coor(self, circles):
         if circles is not None:
             circles = np.uint16(np.around(circles))
+            print("circles length: ", len(circles))
             for circle in circles[0, :]:
                 point = Point()
                 point.x = float(circle[0])
@@ -68,6 +69,15 @@ class ImageSubscriber(Node):
                 bearing.z = 0.0
 
                 self._bearing_angle_publisher.publish(bearing)
+        else:
+            bearing = Point()
+            bearing.x = 0.0
+            bearing.y = 0.0
+            bearing.z = -1.0
+            
+            self._bearing_angle_publisher.publish(bearing)
+            
+            print("Nothing is detected!")
 
 
     def _image_callback(self, CompressedImage):

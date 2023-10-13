@@ -33,10 +33,11 @@ class RangeCatcher(Node):
 
     def object_callback(self, bearing):
         # decide it is detect
-        if bearing is not None:
+        if bearing.z != -1.0:
             self.theta = bearing.x * (pi / 180)
             self.bool_detect = True
-            print("theta: ", self.theta)
+        else:
+            self.bool_detect = False
 
 
     def lidar_callback(self, posinfo):
@@ -46,27 +47,32 @@ class RangeCatcher(Node):
         roi_min = (-30) * (pi / 180)
         roi_max = 30 * (pi / 180)
 
-        if roi_min <= self.theta and roi_max >= self.theta:
-            if self.bool_detect is True:
-                range = np.array(posinfo.ranges)
-                range = range[~np.isnan(range)]
-                n = len(range)
-                
-                angle_min = posinfo.angle_min
-                angle_inc = posinfo.angle_increment
-                
-                object_index = ceil(abs(self.theta) / angle_inc) 
-                if self.theta < 0:
-                    object_index = n - ceil(abs(self.theta) / angle_inc)
-                
-                object_dis = range[object_index]
-                print("distance: ", object_dis)
+        # if roi_min <= self.theta and roi_max >= self.theta:
+        if self.bool_detect is True:
+            range = np.array(posinfo.ranges)
+            range = range[~np.isnan(range)]
+            n = len(range)
+            
+            angle_min = posinfo.angle_min
+            angle_inc = posinfo.angle_increment
+            
+            object_index = ceil(abs(self.theta) / angle_inc) 
+            if self.theta < 0:
+                object_index = n - ceil(abs(self.theta) / angle_inc)
+            
+            object_dis = range[object_index]
+            print("distance: ", object_dis)
 
-                pos = Twist()
-                pos.linear.x = float(object_dis)
-                pos.angular.z = self.theta
+            pos = Twist()
+            pos.linear.x = float(object_dis)
+            pos.angular.z = self.theta
 
-                self.object_position_publisher.publish(pos)
+            self.object_position_publisher.publish(pos)
+        else:
+            pos = Twist()
+            pos.linear.x = 0.0
+            pos.linear.z = -1.0
+            pos.angular.z = 0.0
 
 
 def main(args=None):

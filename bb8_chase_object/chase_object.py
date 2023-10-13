@@ -4,10 +4,11 @@ from geometry_msgs.msg import Point, Twist, Vector3
 from sensor_msgs.msg import LaserScan
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy, QoSReliabilityPolicy, QoSHistoryPolicy
 
+import time
 import numpy as np
 
 
-ideal_dis = 0.4
+ideal_dis = 0.6
 dt = 0.15
 
 
@@ -32,12 +33,17 @@ class ChaseObject(Node):
         self.e_old_a = 0.0
         self.e_integral_a = 0.0
 
+        # Timer to periodically check for object detection timeout
+        self.create_timer(0.1, self.check_detection_timeout)
+        self.last_detected_time = None
+        self.detection_timeout = 1.0
+
 
     def linear_pid(self, distance):
         # kp, ki, kd
         kp = 1.0
         ki = 0.0
-        kd = 0.5
+        kd = 0.6
 
         e_l = distance - ideal_dis
         self.e_integral_l += e_l * dt
@@ -52,9 +58,9 @@ class ChaseObject(Node):
         # kp, ki, kd
         kp = 1.0
         ki = 0.0
-        kd = 0.5
+        kd = 0.3
 
-        e_a = theta - 0
+        e_a = theta
         self.e_integral_a += e_a * dt
         e_dot_a = (e_a - self.e_old_a) / dt
         u_theta = kp * e_a + ki * self.e_integral_a + kd * e_dot_a
@@ -64,18 +70,34 @@ class ChaseObject(Node):
 
 
     def object_callback(self, posinfo):
-        robot_velocity = Twist()
 
-        # if the object is detected
-        distance = posinfo.linear.x
-        theta = posinfo.angular.z
-        u_dis = self.linear_pid(distance)
-        u_theta = self.angular_pid(theta)
+        # robot_velocity = Twist()
+        self.last_detected_time = time.time()  # Update the last detected time
         
-        robot_velocity.linear.x = u_dis
-        robot_velocity.angular.z = u_theta
+        if posinfo.linear.z != -1.0:
+            distance = posinfo.linear.x
+            theta = posinfo.angular.z
+            u_dis = self.linear_pid(distance)
+            u_theta = self.angular_pid(theta)
+
+            robot_velocity = Twist()
+            robot_velocity.linear.x = u_dis
+            robot_velocity.angular.z = u_theta
+
+        else:
+            robot_velocity = Twist()
+            robot_velocity.linear.x = 0.0
+            robot_velocity.angular.z = 0.0
 
         self.velocity_publisher.publish(robot_velocity)
+
+    
+    def check_detection_timeout(self):
+        # If object hasn't been detected for the specified timeout, stop the robot.
+        if self.last_detected_time and time.time() - self.last_detected_time > self.detection_timeout:
+            stop_velocity = Twist()
+            self.velocity_publisher.publish(stop_velocity)
+            self.last_detected_time = None  # Reset
 
 
 def main(args=None):
