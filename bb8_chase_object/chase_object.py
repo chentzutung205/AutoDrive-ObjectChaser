@@ -9,7 +9,7 @@ import numpy as np
 
 
 ideal_dis = 0.6
-dt = 0.15
+dt = 0.2
 
 
 class ChaseObject(Node):
@@ -41,9 +41,9 @@ class ChaseObject(Node):
 
     def linear_pid(self, distance):
         # kp, ki, kd
-        kp = 1.0
+        kp = 0.8
         ki = 0.0
-        kd = 0.6
+        kd = 0.3
 
         e_l = distance - ideal_dis
         self.e_integral_l += e_l * dt
@@ -58,7 +58,7 @@ class ChaseObject(Node):
         # kp, ki, kd
         kp = 1.0
         ki = 0.0
-        kd = 0.3
+        kd = 0.4
 
         e_a = theta
         self.e_integral_a += e_a * dt
@@ -77,8 +77,19 @@ class ChaseObject(Node):
         if posinfo.linear.z != -1.0:
             distance = posinfo.linear.x
             theta = posinfo.angular.z
+
             u_dis = self.linear_pid(distance)
             u_theta = self.angular_pid(theta)
+
+            if u_dis > 0.22:
+                u_dis = 0.22
+            elif u_dis < -0.22:
+                u_dis = -0.22
+            else:
+                u_dis = u_dis
+            
+            print("u_dis: ", u_dis)
+            print("u_theta: ", u_theta)
 
             robot_velocity = Twist()
             robot_velocity.linear.x = u_dis
