@@ -61,6 +61,6 @@ Ensure that the Raspberry Pi camera and LIDAR are properly connected and publish
 - Ensure that the robot's motor controllers are responding to velocity commands.
 - Use ROS2 tools like `ros2 topic echo` and `rqt_graph` for debugging.
 
+## Reference
 
-For detailed information on the LIDAR, refer to:
-http://emanual.robotis.com/docs/en/platform/turtlebot3/appendix_lds_01/
+[LIDAR](http://emanual.robotis.com/docs/en/platform/turtlebot3/appendix_lds_01/)
