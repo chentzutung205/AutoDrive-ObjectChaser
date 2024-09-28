@@ -7,7 +7,7 @@ This project is a part of the larger Autonomous Vehicle initiative.
 This ROS2 package enables a robot to chase a desired object observed in its local coordinate frame. The robot always faces the object and maintains a desired distance from it. The system combines camera and LIDAR data for accurate object tracking and uses PID control for smooth movement.
 
 ## Dependencies
-- ROS2
+- ROS2 Humble
 - sensor_msgs
 - std_msgs
 - geometry_msgs
