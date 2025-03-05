@@ -34,8 +34,8 @@ This node subscribes to the object location from detect_object and the LIDAR dat
 This node implements two PID controllers (angular and linear) to make the robot face the object and maintain a desired distance. It subscribes to the data from get_object_range and publishes velocity commands for the robot.
 
 ## Usage
-1. Ensure all dependencies are installed.
-2. Clone this package into your ROS2 workspace.
+1. Clone this package into your ROS2 workspace.
+2. Ensure all dependencies are installed.
 3. Build the package using `colcon build`.
 4. Source your workspace.
 5. Run the nodes using:
